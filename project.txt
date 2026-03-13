@@ -1,0 +1,193 @@
+Project: bis-hackathon (Boilerplate)
+
+Overview
+--------
+This repository is a full-stack Next.js + TypeScript boilerplate providing:
+- Authentication via BetterAuth (Google OAuth support) with Prisma persistence
+- PostgreSQL database managed with Prisma and migrations
+- Type-safe RPC API via TRPC + SuperJSON + React Query
+- Rate limiting using Upstash Redis (sliding window)
+- UI primitives and design system via shadcn/ui (Radix + Phosphor) and Tailwind CSS v4
+- Notifications with Sonner, icons with Phosphor/Lucide, and utility helpers
+
+Quick TL;DR (commands)
+-----------------------
+Install dependencies:
+
+```
+npm install
+```
+
+Run development server:
+
+```
+npm run dev
+```
+
+Generate / run Prisma migrations (after setting `DATABASE_URL`):
+
+```
+npx prisma migrate dev
+```
+
+Build & start:
+
+```
+npm run build
+npm run start
+```
+
+Required Environment Variables
+----------------------------
+Provide these in your `.env` (example values excluded):
+
+- `DATABASE_URL` — Postgres connection string (e.g. Neon, Supabase, local Postgres)
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
+- `BETTER_AUTH_SECRET` — BetterAuth secret (generate securely)
+- `BETTER_AUTH_URL` — Base URL used by BetterAuth (e.g. http://localhost:3000)
+- `UPSTASH_REDIS_REST_URL` — Upstash REST URL for rate-limiter
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash REST token
+
+High-level Architecture
+-----------------------
+- Next.js app lives in `src/app/` and uses the app router.
+- Authentication:
+  - Server config in `src/features/auth/services/auth.ts` (BetterAuth + prisma adapter).
+  - Client config in `src/features/auth/services/auth-client.ts`.
+  - NextJS auth route handler at `src/app/api/auth/[...all]/route.ts`.
+  - Auth UI components at `src/features/auth/ui/` and hook in `src/features/auth/hooks/use-auth.ts`.
+- Database:
+  - Prisma schema at `prisma/schema.prisma` (User, Session, Account, Verification models).
+  - Prisma client singleton at `src/lib/prisma.ts`.
+  - Migrations stored under `prisma/migrations/`.
+- TRPC:
+  - Initialization in `src/dal/init.ts` (context, transformers).
+  - Main router in `src/dal/routers/_app.ts`.
+  - Client provider & React Query integration in `src/dal/client.tsx` and `src/dal/query-client.ts`.
+  - Server endpoint at `src/app/api/trpc/[trpc]/route.ts` (includes rate-limiter enforcement).
+- Rate limiting:
+  - Config in `src/utils/config/rate-limit.ts` using Upstash Redis and sliding-window limits.
+  - Enforced in the TRPC API handler; typical default is 10 requests / 10s per IP.
+
+Key Files (quick reference)
+--------------------------
+- `package.json` — scripts and deps
+- `prisma/schema.prisma` — DB models
+- `prisma/migrations/` — generated SQL migrations
+- `src/lib/prisma.ts` — Prisma client
+- `src/features/auth/services/auth.ts` — BetterAuth server config
+- `src/features/auth/services/auth-client.ts` — BetterAuth client config
+- `src/features/auth/hooks/use-auth.ts` — auth hook
+- `src/app/api/auth/[...all]/route.ts` — auth route handler
+- `src/dal/init.ts` — trpc initialization
+- `src/dal/routers/_app.ts` — trpc router
+- `src/app/api/trpc/[trpc]/route.ts` — trpc API endpoint + rate limit
+- `src/utils/config/rate-limit.ts` — upstash rate-limit configuration
+- `components.json` — shadcn/ui config
+- `src/styles/globals.css` — design tokens and Tailwind entry
+- `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `eslint.config.mjs` — project configs
+
+Setup Guide (local development)
+-------------------------------
+1. Clone the repo and install dependencies:
+
+   ```bash
+   git clone <repo>
+   cd bis-hackathon
+   npm install
+   ```
+
+2. Create a `.env` file with values for `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `UPSTASH_REDIS_REST_URL`, and `UPSTASH_REDIS_REST_TOKEN`.
+
+   - Generate `BETTER_AUTH_SECRET` with a secure generator (e.g., `openssl rand -base64 32`).
+   - For Google OAuth set redirect URI to `http://localhost:3000/api/auth/callback/google` in Google Cloud Console.
+
+3. Run Prisma migrations to create the DB schema:
+
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+
+   This creates auth tables (User, Session, Account, Verification) using the migration in `prisma/migrations/`.
+
+4. Start development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open `http://localhost:3000` and authenticate via the login UI at `/auth`.
+
+Auth Details
+------------
+- BetterAuth is configured server-side to persist sessions and accounts to Postgres via the Prisma adapter.
+- Social login provider configured: Google. Add other providers by updating `src/features/auth/services/auth.ts`.
+- The auth route handler is `src/app/api/auth/[...all]/route.ts` and must be reachable by the OAuth provider redirect.
+
+TRPC & Rate Limiting
+--------------------
+- TRPC server is initialized in `src/dal/init.ts`. Use `createRouter()` and procedures from `src/dal/routers/_app.ts` to add endpoints.
+- The API route `src/app/api/trpc/[trpc]/route.ts` applies a per-IP rate limit using the Upstash-backed limiter. Adjust limits in `src/utils/config/rate-limit.ts`.
+
+UI, Styling & Design System
+---------------------------
+- Tailwind CSS v4 is used with PostCSS; global styles and design tokens live in `src/styles/globals.css`.
+- UI primitives and components follow shadcn/ui patterns. Components are under `src/components/ui/` and `src/features/*/ui/`.
+- Button variants use `class-variance-authority` (CVA) for consistent styling.
+
+Error Handling & Utilities
+--------------------------
+- Application error classes are defined in `src/utils/error/errors.ts` and normalized in `src/utils/error/api-error.ts`.
+- Utility helper `cn()` in `src/lib/utils.ts` combines `clsx` and `tailwind-merge`.
+
+Deploying
+---------
+- Ensure all environment variables are set in the target environment (production DATABASE_URL, OAuth secrets, Upstash tokens, BETTER_AUTH_URL set to your production domain).
+- Build and run:
+
+```
+npm run build
+npm run start
+```
+
+- If using serverless platforms (Vercel, Cloudflare Pages with Functions, etc.), verify that the BetterAuth callback URL and Upstash access are configured correctly and that the platform supports the Next.js app router features used.
+
+Observability & Next Steps
+--------------------------
+- Recommended additions:
+  - Add logging (Pino/Winston) and structured error reporting (Sentry)
+  - Add tests (Vitest/Jest) and CI workflow
+  - Add seed scripts for dev data
+  - Expand docs into `docs/` for step-by-step guides
+
+Troubleshooting
+---------------
+- If Google auth callback fails: verify `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and redirect URI in Google Cloud Console match `BETTER_AUTH_URL` + `/api/auth/callback/google`.
+- If migrations fail: ensure `DATABASE_URL` is valid and reachable; check `prisma/migrations/*/migration.sql` for conflicts.
+- If rate-limiter blocks prematurely: check `UPSTASH_REDIS_REST_URL` and token, and adjust sliding-window parameters in `src/utils/config/rate-limit.ts`.
+
+Where to look in the code
+------------------------
+- Root layout & providers: `src/app/layout.tsx`
+- Auth server config: `src/features/auth/services/auth.ts`
+- Auth client: `src/features/auth/services/auth-client.ts`
+- TRPC init & router: `src/dal/init.ts`, `src/dal/routers/_app.ts`
+- TRPC API endpoint (rate limit): `src/app/api/trpc/[trpc]/route.ts`
+- Prisma client: `src/lib/prisma.ts`
+- Rate-limiter config: `src/utils/config/rate-limit.ts`
+- Tailwind + design tokens: `src/styles/globals.css`
+
+Contact & Contribution
+----------------------
+If you're extending this boilerplate, please:
+1. Add features in feature folders under `src/features/`.
+2. Keep server-only code in server folders and use `server-only` where appropriate.
+3. Expand docs into `docs/` and consider adding example deployments.
+
+License & Attribution
+---------------------
+This file documents the repository contents and setup. Keep third-party license compliance in `package.json` and respect upstream licenses for libraries used.
+
+---
+Generated: 2026-03-13

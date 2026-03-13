@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: child) {
   return (
-    <html lang="en" className={cn("dark font-sans antialiased", inter.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn("dark font-sans antialiased", inter.variable)} suppressHydrationWarning={true}>
       <body>
         <TRPCReactProvider>
           {children}

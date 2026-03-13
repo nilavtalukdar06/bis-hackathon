@@ -8,30 +8,33 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String   @id @default(cuid())
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+  scans    Scan[]    @relation("UserScans")
 
   @@unique([email])
   @@map("user")
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(cuid())
   expiresAt DateTime
   token     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@index([userId])
@@ -39,11 +42,13 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String @id @default(cuid())
+  accountId  String
+  providerId String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -51,15 +56,16 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@map("account")
 }
 
 model Verification {
-  id         String   @id
+  id         String   @id @default(cuid())
   identifier String
   value      String
   expiresAt  DateTime
@@ -68,4 +74,43 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model MedicineBatch {
+  id           String   @id @default(cuid())
+  batchNumber  String   @unique
+  medicineName String?
+  manufacturer String?
+  expiry       DateTime?
+  approved     Boolean  @default(false)
+  recallStatus Boolean  @default(false)
+
+  scans     Scan[]
+  createdAt DateTime @default(now())
+
+  @@map("medicine_batch")
+}
+
+model Scan {
+  id String @id @default(cuid())
+
+  medicineBatchId String?
+  medicineBatch   MedicineBatch? @relation(fields: [medicineBatchId], references: [id], onDelete: Cascade)
+
+  imageUrl String?
+
+  hologram        Boolean?
+  spellingErrors  Json?
+  suspicious      Boolean?
+  confidenceScore Float?
+
+  latitude  Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+
+  reportedById String?
+  reportedBy   User?   @relation("UserScans", fields: [reportedById], references: [id], onDelete: SetNull)
+
+  @@map("scan")
 }

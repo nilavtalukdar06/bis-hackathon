@@ -12,7 +12,7 @@ export default async function AuthPage() {
     redirect("/dashboard");
   }
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-950 via-gray-950 to-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-emerald-950 via-gray-950 to-gray-900">
       {/* Background pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-5">
         <div

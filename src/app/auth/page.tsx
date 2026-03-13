@@ -1,18 +1,17 @@
-import { Button } from "@/components/ui/button";
 import { auth } from "@/features/auth/services/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
+export default async function AuthPage() {
   const result = await auth.api.getSession({
     headers: await headers(),
   });
-  if (!result?.session) {
-    redirect("/auth");
+  if (result?.session) {
+    redirect("/");
   }
   return (
-    <div className="p-4 w-full">
-      <Button>Click Me</Button>
+    <div className="w-full p-4">
+      <p className="text-muted-foreground font-light">Auth Screen</p>
     </div>
   );
 }

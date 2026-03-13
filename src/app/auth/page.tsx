@@ -1,4 +1,5 @@
 import { auth } from "@/features/auth/services/auth";
+import { LoginButton } from "@/features/auth/ui/login-button";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -10,8 +11,8 @@ export default async function AuthPage() {
     redirect("/");
   }
   return (
-    <div className="w-full p-4">
-      <p className="text-muted-foreground font-light">Auth Screen</p>
+    <div className="w-full p-4 max-w-sm mx-auto min-h-screen flex justify-center items-center">
+      <LoginButton />
     </div>
   );
 }

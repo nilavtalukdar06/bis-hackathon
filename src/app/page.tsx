@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { auth } from "@/features/auth/services/auth";
+import { LogoutButton } from "@/features/auth/ui/logout-button";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -12,7 +12,7 @@ export default async function Home() {
   }
   return (
     <div className="p-4 w-full">
-      <Button>Click Me</Button>
+      <LogoutButton />
     </div>
   );
 }

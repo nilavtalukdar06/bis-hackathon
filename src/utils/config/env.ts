@@ -12,6 +12,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z
     .string()
     .min(1, { message: "google client secret is required" }),
+  BETTER_AUTH_SECRET: z.string().min(1, { message: "auth secret is required" }),
+  BETTER_AUTH_URL: z.string().url({ message: "auth url is not valid" }),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -7,7 +7,7 @@ export const scanRouter = createTRPCRouter({
   analyzeImage: baseProcedure
     .input(
       z.object({
-        imageUrl: z.string().url("Valid image URL required"),
+        imageUrl: z.string().min(1, "Image URL is required"),
         medicineBatchId: z.string().optional(),
         latitude: z.number().optional(),
         longitude: z.number().optional(),

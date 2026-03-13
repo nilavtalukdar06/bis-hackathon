@@ -3,7 +3,9 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
 const analysisSchema = z.object({
-  hologram: z.boolean().describe("Whether a hologram is visible on the packaging"),
+  hologram: z
+    .boolean()
+    .describe("Whether a hologram is visible on the packaging"),
   spellingErrors: z
     .array(z.string())
     .describe("List of spelling errors found on the packaging"),
@@ -14,23 +16,33 @@ const analysisSchema = z.object({
     .number()
     .min(0)
     .max(1)
-    .describe("Confidence score from 0 to 1 where 1 is most confident it is genuine"),
+    .describe(
+      "Confidence score from 0 to 1 where 1 is most confident it is genuine",
+    ),
   batchFormatValid: z
     .boolean()
     .describe("Whether the batch number format appears valid"),
   printQuality: z
     .enum(["high", "medium", "low"])
     .describe("Overall print quality of the packaging"),
-  analysis: z
-    .string()
-    .describe("Brief summary of the analysis findings"),
+  analysis: z.string().describe("Brief summary of the analysis findings"),
 });
 
 export type PackagingAnalysis = z.infer<typeof analysisSchema>;
 
 export async function analyzePackagingImage(
-  imageUrl: string
+  imageUrl: string,
 ): Promise<PackagingAnalysis> {
+  const isDataUrl = imageUrl.startsWith("data:");
+  const imageData = isDataUrl ? imageUrl.split(",")[1] : new URL(imageUrl);
+  const mimeType = isDataUrl
+    ? (imageUrl.split(";")[0].split(":")[1] as
+        | "image/jpeg"
+        | "image/png"
+        | "image/webp"
+        | "image/gif")
+    : undefined;
+
   const { object } = await generateObject({
     model: openai("gpt-4o"),
     schema: analysisSchema,
@@ -43,7 +55,7 @@ Analyze the medicine packaging image and detect:
 - Spelling errors on the packaging (common in counterfeits)
 - Batch format validity
 - Print quality (counterfeits often have low print quality)
-
+ 
 Be thorough but fair in your analysis. If the image is not a medicine package, mark it as suspicious with low confidence.`,
       },
       {
@@ -55,7 +67,8 @@ Be thorough but fair in your analysis. If the image is not a medicine package, m
           },
           {
             type: "image",
-            image: imageUrl,
+            image: imageData,
+            mimeType,
           },
         ],
       },

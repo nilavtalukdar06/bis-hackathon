@@ -11,7 +11,7 @@ export const useAuth = () => {
     await authClient.signIn.social(
       {
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       },
       {
         onRequest: () => {

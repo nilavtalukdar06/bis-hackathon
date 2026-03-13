@@ -68,7 +68,6 @@ Be thorough but fair in your analysis. If the image is not a medicine package, m
           {
             type: "image",
             image: imageData,
-            mimeType,
           },
         ],
       },

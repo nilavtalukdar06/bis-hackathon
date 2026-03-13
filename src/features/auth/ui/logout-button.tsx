@@ -11,7 +11,8 @@ export function LogoutButton() {
       disabled={isLoggingOut}
       onClick={logout}
       variant="destructive"
-      className="font-normal"
+      className="font-normal rounded-md"
+      size="lg"
     >
       Logout
       <LogOut />

@@ -62,18 +62,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-
-        <div className="border-t border-border p-3">
-          <Link
-            href="/"
-            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm
-                       font-medium text-muted-foreground transition-all
-                       hover:bg-destructive/5 hover:text-destructive"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Link>
-        </div>
       </aside>
 
       {/* Mobile Header */}

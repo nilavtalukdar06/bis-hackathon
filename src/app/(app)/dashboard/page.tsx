@@ -10,7 +10,7 @@ import {
   Activity,
   ArrowRight,
 } from "lucide-react";
-
+import { LogoutButton } from "@/features/auth/ui/logout-button";
 const quickActions = [
   {
     href: "/medicine",
@@ -46,22 +46,34 @@ const quickActions = [
   },
 ];
 
-const stats = [
-  { label: "Batches Verified", value: "2,847", icon: Shield },
-  { label: "Fakes Detected", value: "156", icon: AlertTriangle },
-  { label: "AI Scans", value: "1,203", icon: Camera },
-  { label: "Reports Filed", value: "89", icon: Activity },
-];
+import { useTRPC } from "@/dal/client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
+  const trpc = useTRPC();
+  const { data: dbStats, isLoading } = useQuery(
+    trpc.stats.getDashboardStats.queryOptions()
+  );
+
+  const stats = [
+    { label: "Batches Verified", value: dbStats?.batchesVerified?.toLocaleString() || "0", icon: Shield },
+    { label: "Fakes Detected", value: dbStats?.fakesDetected?.toLocaleString() || "0", icon: AlertTriangle },
+    { label: "AI Scans", value: dbStats?.aiScans?.toLocaleString() || "0", icon: Camera },
+    { label: "Reports Filed", value: dbStats?.reportsFiled?.toLocaleString() || "0", icon: Activity },
+  ];
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-4">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="mt-1 text-muted-foreground">
-          Welcome to DawaScan — India&apos;s AI-powered medicine verification platform
+          Welcome to DawaScan — India&apos;s AI-powered medicine verification
+          platform
         </p>
+      </div>
+      <div className="mb-4">
+        <LogoutButton />
       </div>
 
       {/* Stats Grid */}
@@ -74,7 +86,11 @@ export default function DashboardPage() {
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/10">
               <stat.icon className="h-5 w-5 text-emerald-600" />
             </div>
-            <p className="text-2xl font-bold">{stat.value}</p>
+            {isLoading ? (
+              <div className="h-8 w-16 animate-pulse rounded bg-muted"></div>
+            ) : (
+              <p className="text-2xl font-bold">{stat.value}</p>
+            )}
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </div>
         ))}
@@ -117,7 +133,10 @@ export default function DashboardPage() {
         <div className="grid gap-2 sm:grid-cols-2">
           {[
             { batch: "BATCH-2024-001", desc: "Genuine — Cipla Paracetamol" },
-            { batch: "BATCH-2024-002", desc: "Genuine — Sun Pharma Amoxicillin" },
+            {
+              batch: "BATCH-2024-002",
+              desc: "Genuine — Sun Pharma Amoxicillin",
+            },
             { batch: "BATCH-FAKE-001", desc: "Counterfeit — Unknown source" },
             { batch: "RECALL-2024-001", desc: "Recalled — Maiden Cough Syrup" },
           ].map((item) => (
